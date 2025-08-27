@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan d'affaires interactif pour une agence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Palette choisie : Harmonie chaude -->
+    <!-- Plan de la structure de l'application : L'application est conçue comme une feuille de route interactive, transformant le plan d'affaires linéaire en une expérience plus engageante et orientée vers les tâches. Une navigation en haut de page permet aux utilisateurs de passer d'une phase clé à l'autre. Le contenu principal est structuré comme une chronologie verticale où chaque phase est une section distincte. À l'intérieur de chaque phase, les étapes clés sont présentées sous forme d'accordéon interactif, permettant aux utilisateurs de développer et de réduire les détails. Cela évite la surcharge d'informations et encourage une exploration ciblée. Un graphique dynamique est inclus dans la section "Finances" pour visualiser les projections, ajoutant un élément quantitatif. Cette structure a été choisie car elle reflète le parcours de l'utilisateur qui construit une entreprise - en visualisant le chemin global, puis en approfondissant les étapes spécifiques et actionnables - ce qui rend le plan plus gérable et dynamique qu'un document statique. -->
+    <!-- Choix de visualisation et de contenu : 
+        - Infos du rapport : Plan global en 4 phases -> Objectif : Organiser/Changer -> Visualisation/Présentation : Chronologie verticale interactive (HTML/CSS) -> Interaction : Navigation par défilement avec mise en évidence de l'état actif -> Justification : Fournit un aperçu de haut niveau du cycle de vie de l'entreprise et de la progression de l'utilisateur.
+        - Infos du rapport : Étapes dans chaque phase -> Objectif : Organiser/Informer -> Visualisation/Présentation : Composant d'interface utilisateur en accordéon (HTML/CSS/JS) -> Interaction : Clic pour développer/réduire le contenu détaillé de chaque étape -> Justification : Gère la densité des informations, permettant aux utilisateurs de se concentrer sur une seule étape à la fois.
+        - Infos du rapport : Projections financières (Phase 1) -> Objectif : Informer/Comparer -> Visualisation/Présentation : Graphique linéaire -> Interaction : Survol pour les info-bulles montrant les points de données -> Justification : Traduit le concept abstrait de la planification financière en un visuel clair et tangible, comparant les revenus et les coûts projetés au fil du temps. -> Bibliothèque/Méthode : Chart.js/Canvas.
+        - Infos du rapport : Calendriers clés (ex. "Semaines 1-4") -> Objectif : Informer -> Visualisation/Présentation : Titres de texte proéminents (HTML/CSS) -> Interaction : Affichage statique -> Justification : Fournit un contexte immédiat et lisible pour la durée et l'effort requis pour chaque phase.
+    -->
+    <!-- CONFIRMATION : Pas de graphiques SVG. Pas de JS Mermaid. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333D4B;
+        }
+        .nav-link.active {
+            background-color: #4A5568;
+            color: #FFFFFF;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .accordion-button.open .accordion-icon {
+            transform: rotate(180deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl font-bold text-gray-800">Plan de lancement d'agence</h1>
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="#phase1" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">Phase 1 : Fondation</a>
+                    <a href="#phase2" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">Phase 2 : Talent</a>
+                    <a href="#phase3" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">Phase 3 : Lancement</a>
+                    <a href="#phase4" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">Phase 4 : Expansion</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        
+        <div class="text-center mb-12 md:mb-16">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Votre feuille de route vers une agence évolutive</h2>
+            <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">Un guide interactif pour construire votre agence du concept à l'expansion, basé sur une approche éprouvée par phases.</p>
+        </div>
+
+        <div class="relative">
+            <div class="absolute left-1/2 -translate-x-1/2 h-full w-0.5 bg-gray-200 hidden md:block"></div>
+
+            <section id="phase1" class="mb-16 scroll-mt-20">
+                <div class="md:grid md:grid-cols-2 md:gap-8 items-center">
+                    <div class="md:text-right md:pr-8">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-teal-600">Phase 1</p>
+                        <h3 class="text-3xl font-bold text-gray-900">Fondation et infrastructure</h3>
+                        <p class="text-lg font-medium text-gray-500 mt-1">Semaines 1-4</p>
+                        <p class="mt-4 text-gray-600">Cette phase initiale a pour but de construire le cœur intellectuel et opérationnel de votre entreprise. Ici, vous passerez d'un concept à un système fonctionnel et documenté, posant les bases de tout ce qui suit.</p>
+                    </div>
+                    <div class="mt-8 md:mt-0">
+                        <div class="space-y-4">
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 1 : Définir la niche et la proposition de valeur</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Analyse approfondie :</strong> Spécifiez le type d'assistants : techniques, créatifs ou administratifs.</li>
+                                            <li><strong>Client idéal :</strong> Créez un profil de client détaillé (ex : fondateur en bootstrapping, startup en croissance).</li>
+                                            <li><strong>Affiner la proposition de valeur :</strong> Élaborez une déclaration convaincante qui va au-delà de "travail de qualité, prix abordable".</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 2 : Mise en place légale et financière</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2 mb-4">
+                                            <li><strong>Structure légale :</strong> Enregistrez votre entreprise (ex : SARL pour la protection de la responsabilité).</li>
+                                            <li><strong>Contrats :</strong> Rédigez un contrat de service pour les clients et un contrat pour les talents. Décidez du statut d'entrepreneur ou d'employé.</li>
+                                            <li><strong>Finances :</strong> Créez un compte bancaire professionnel et un modèle financier de base.</li>
+                                        </ul>
+                                        <div class="chart-container">
+                                            <canvas id="financialsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 3 : Construire le moteur de talents</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <p class="font-medium mb-2">Programme de formation basé sur des projets :</p>
+                                        <ol class="list-decimal list-inside space-y-2 mb-4">
+                                            <li><strong>Carte des compétences :</strong> Liste de contrôle des compétences essentielles pour votre niche (ex : HTML, CSS, JS, React pour le développement web).</li>
+                                            <li><strong>Sélection des ressources :</strong> Liez les compétences aux meilleures ressources en ligne gratuites.</li>
+                                            <li><strong>Évaluation basée sur des projets :</strong> Concevez des projets obligatoires pour prouver la compétence.</li>
+                                        </ol>
+                                        <p class="font-medium mb-2">Processus de sélection et de certification :</p>
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Examen par les pairs :</strong> Notez les projets selon une grille de lecture claire.</li>
+                                            <li><strong>Entretien en direct :</strong> Évaluez les compétences en résolution de problèmes et la communication.</li>
+                                            <li><strong>Certification :</strong> Ajoutez officiellement les candidats retenus à votre vivier de talents.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="phase2" class="mb-16 scroll-mt-20">
+                <div class="md:grid md:grid-cols-2 md:gap-8 items-center">
+                    <div class="md:order-2 md:text-left md:pl-8">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-teal-600">Phase 2</p>
+                        <h3 class="text-3xl font-bold text-gray-900">Acquisition de talents et programme pilote</h3>
+                        <p class="text-lg font-medium text-gray-500 mt-1">Semaines 5-12</p>
+                        <p class="mt-4 text-gray-600">Avec votre système en place, il est temps de tester son efficacité et de commencer à constituer votre équipe. Cette phase se concentre sur le recrutement de votre première cohorte, l'exécution de votre programme et l'intégration des meilleurs talents.</p>
+                    </div>
+                    <div class="mt-8 md:mt-0 md:order-1">
+                         <div class="space-y-4">
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 1 : Recrutement de talents</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Canaux de recrutement :</strong> Utilisez des plateformes comme LinkedIn, Reddit, Discord et les sites d'emploi universitaires.</li>
+                                            <li><strong>Message marketing :</strong> Présentez-le comme un chemin vers des clients rémunérés, pas seulement comme un cours. Mettez l'accent sur la certification et la construction d'un portfolio.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 2 : Lancer le programme pilote</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Première cohorte :</strong> Recrutez 5 à 10 personnes prometteuses. Soyez transparent quant à la nature exigeante du programme.</li>
+                                            <li><strong>Documentation :</strong> Documentez méticuleusement le processus, les défis et les questions pour créer vos procédures opérationnelles standard (POS).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 3 : Intégrer vos premiers talents</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Sélection finale :</strong> Menez les entretiens finaux et sélectionnez les 2 ou 3 meilleurs candidats du programme pilote.</li>
+                                            <li><strong>Systèmes internes :</strong> Intégrez-les à vos outils de communication (Slack) et de gestion de projet (Trello, Asana).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="phase3" class="mb-16 scroll-mt-20">
+                <div class="md:grid md:grid-cols-2 md:gap-8 items-center">
+                    <div class="md:text-right md:pr-8">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-teal-600">Phase 3</p>
+                        <h3 class="text-3xl font-bold text-gray-900">Acquisition de clients et lancement</h3>
+                        <p class="text-lg font-medium text-gray-500 mt-1">Semaines 13-20</p>
+                        <p class="mt-4 text-gray-600">Maintenant que vous disposez de l'infrastructure et d'un vivier de talents, il est temps de générer des revenus. Cette phase concerne votre stratégie de mise sur le marché, de la tarification au marketing, en passant par l'obtention de vos premiers clients payants.</p>
+                    </div>
+                    <div class="mt-8 md:mt-0">
+                        <div class="space-y-4">
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 1 : Stratégie de mise sur le marché</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Tarification :</strong> Établissez une structure tarifaire à plusieurs niveaux (ex : Forfait de départ, Forfait croissance, Forfait entreprise).</li>
+                                            <li><strong>Canaux :</strong> Concentrez-vous sur les canaux où vos clients idéaux sont actifs (ex : LinkedIn, publicités ciblées).</li>
+                                            <li><strong>Programme de parrainage :</strong> Incitez vos talents et vos premiers clients à vous recommander.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 2 : Préparer le pitch deck et les études de cas</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Pitch deck :</strong> Créez une présentation concise qui met en évidence le problème, votre solution unique et votre processus.</li>
+                                            <li><strong>Études de cas :</strong> Transformez les projets de la cohorte pilote en études de cas professionnelles pour prouver l'efficacité de votre système.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 3 : Trouver vos premiers clients</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Ventes directes :</strong> Contactez directement vos profils de clients idéaux sur LinkedIn ou par e-mail.</li>
+                                            <li><strong>Marketing de contenu :</strong> Lancez un blog avec des articles pertinents pour les points faibles de vos clients.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="phase4" class="scroll-mt-20">
+                 <div class="md:grid md:grid-cols-2 md:gap-8 items-center">
+                    <div class="md:order-2 md:text-left md:pl-8">
+                        <p class="text-sm font-semibold uppercase tracking-wider text-teal-600">Phase 4</p>
+                        <h3 class="text-3xl font-bold text-gray-900">Optimisation et expansion</h3>
+                        <p class="text-lg font-medium text-gray-500 mt-1">Mois 6+</p>
+                        <p class="mt-4 text-gray-600">Votre entreprise est opérationnelle. Cette phase finale vise à affiner vos processus pour plus d'efficacité et à explorer de nouvelles voies de croissance, transformant votre lancement réussi en une entreprise durable et à long terme.</p>
+                    </div>
+                    <div class="mt-8 md:mt-0 md:order-1">
+                         <div class="space-y-4">
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 1 : Standardiser les opérations</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Automatiser :</strong> Automatisez les tâches répétitives comme la facturation, les paiements et la qualification des prospects.</li>
+                                            <li><strong>Boucle de rétroaction :</strong> Recueillez et analysez systématiquement les commentaires des clients pour affiner votre formation et vos processus.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                                    <span>Étape 2 : Expansion et diversification</span>
+                                    <span class="accordion-icon transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content">
+                                    <div class="p-4 border-t border-gray-200 text-gray-700">
+                                        <ul class="list-disc list-inside space-y-2">
+                                            <li><strong>Nouvelles niches :</strong> Appliquez votre modèle à succès à de nouveaux domaines (ex : design graphique, analyse de données).</li>
+                                            <li><strong>Offres de services échelonnées :</strong> Proposez des services à plus forte valeur ajoutée, comme des rôles de leadership ou de stratégie.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; 2025 Plan de lancement d'agence. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    button.classList.toggle('open');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            const financialData = {
+                labels: Array.from({ length: 18 }, (_, i) => `Mois ${i + 1}`),
+                datasets: [
+                    {
+                        label: 'Revenus projetés',
+                        data: Array.from({ length: 18 }, (_, i) => 1000 + (i * 500) + Math.random() * 1000 * (i/2)),
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Coûts projetés',
+                        data: Array.from({ length: 18 }, (_, i) => 1500 + (i * 200) + Math.random() * 500),
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            };
+
+            const financialsChartCtx = document.getElementById('financialsChart').getContext('2d');
+            new Chart(financialsChartCtx, {
+                type: 'line',
+                data: financialData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Projections financières sur 18 mois'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value / 1000 + 'k €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
